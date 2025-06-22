@@ -6,6 +6,8 @@ from datetime import datetime
 from urllib.parse import urlencode
 from tenacity import retry, wait_fixed, stop_after_attempt
 
+from src.models.binance_klines import Klines
+
 
 class BinanceKlinesExtractor:
     @retry(
@@ -20,7 +22,7 @@ class BinanceKlinesExtractor:
             start_time: datetime | None = None,
             end_time: datetime | None = None,
             limit: int | None = None
-    ) -> dict[str, Any]:
+    ) -> Klines:
         """
         TODO
         1. Nest into try catch, and include logging
@@ -47,7 +49,8 @@ class BinanceKlinesExtractor:
             async with client.get(url, ssl=False) as response:
                 if response.status == 200:
                     data: dict[str, Any] = await response.json()
-                    return data
+                    k_lines: Klines = Klines.from_json(symbol=symbol, raw_data=data)
+                    return k_lines
                 else:
                     raise aiohttp.ClientError(f"Received non-status code 200: {response.status}")
 
@@ -55,7 +58,7 @@ class BinanceKlinesExtractor:
 if __name__ == "__main__":
     binance_klines_extractor: BinanceKlinesExtractor = BinanceKlinesExtractor()
     event_loop: AbstractEventLoop = new_event_loop()
-    res: dict[str, Any] = event_loop.run_until_complete(binance_klines_extractor.extract(
+    res: Klines = event_loop.run_until_complete(binance_klines_extractor.extract(
         symbol="BTCUSDT",
         interval="1m",
         start_time=datetime(2024, 1, 1),
