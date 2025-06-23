@@ -1,7 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel
-from src.models.binance_rate_limit import RateLimit
-from src.models.binance_filters import SymbolFilter, ExchangeFilter
+from src.models.service_level.binance_rate_limit import RateLimit
+from src.models.service_level.binance_filters import SymbolFilter, ExchangeFilter
 from pprint import pprint
 
 
