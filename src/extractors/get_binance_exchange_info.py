@@ -4,7 +4,7 @@ import aiohttp
 from pprint import pprint
 from tenacity import retry, wait_fixed, stop_after_attempt
 
-from src.models.binance_exchange_info import ExchangeInfo
+from src.models.service_level.binance_exchange_info import ExchangeInfo
 
 
 class BinanceExchangeInfoExtractor:
