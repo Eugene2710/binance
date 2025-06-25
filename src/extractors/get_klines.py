@@ -6,7 +6,7 @@ from datetime import datetime
 from urllib.parse import urlencode
 from tenacity import retry, wait_fixed, stop_after_attempt
 
-from src.models.binance_klines import Klines
+from src.models.service_level.binance_klines import Klines
 
 
 class BinanceKlinesExtractor:
