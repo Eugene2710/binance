@@ -1,6 +1,6 @@
 # Binance Pipeline
 
-This project extracts
+This project extracts and streams (in progress)
 
 1. OrderBook information
 2. KLines Candlestick Data for OCHLV data for trading pairs.
@@ -24,6 +24,14 @@ Hard Limit is the limit which will be applicable for the project thus far with t
 [Klines Resolution](https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints#klinecandlestick-data): 1s
 
 Note: To get exchange info for klines info, [ExchangeInfo API](https://developers.binance.com/docs/derivatives/option/market-data/Exchange-Information#api-description) is being used too
+
+## Websocket Limits
+- WebsSocket connections have a limit of 5 incoming messages per second where each message is considered a PING frame, PONG frame, or JSON controlled message(e.g subscribe, unsubscribe)
+- Connection tha goes beyond limit will be disconnected and repeated disconnections may be banned by IP address
+- A single connection can listen to a max of 1024 streams
+- 300 connections per attempt every 5 minutes per IP -> approx. 1 connection per second
+
+Source: [Binance Stream Docs](https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams)
 
 ### Potential Questions to consider
 QQ: For 1 trading pair, how many API requests do you need to get 1 minute resolution data, for start of data 2024 and to get the data in a reasonable amount of time, let's say 3 days.
