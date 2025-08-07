@@ -59,7 +59,7 @@ if __name__ == "__main__":
     binance_klines_extractor: BinanceKlinesExtractor = BinanceKlinesExtractor()
     event_loop: AbstractEventLoop = new_event_loop()
     res: Klines = event_loop.run_until_complete(binance_klines_extractor.extract(
-        symbol="BTCUSDT",
+        symbol="ETHUSDT",
         interval="1m",
         start_time=datetime(2024, 1, 1),
         end_time=datetime(2024, 1, 1, 8, 20)
