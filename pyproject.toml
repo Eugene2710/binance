@@ -28,6 +28,7 @@ pytest-asyncio-cooperative = "^0.37.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.14.1"
+pytest-asyncio = "^1.1.0"
 
 [build-system]
 requires = ["poetry-core"]
