@@ -9,11 +9,7 @@ from src.models.service_level.binance_exchange_info import ExchangeInfo
 
 class BinanceExchangeInfoExtractor:
     @staticmethod
-    @retry(
-        wait=wait_fixed(0.01),
-        stop=stop_after_attempt(5),
-        reraise=True
-    )
+    @retry(wait=wait_fixed(0.01), stop=stop_after_attempt(5), reraise=True)
     async def extract(symbol: str) -> ExchangeInfo:
         """
         Get Exchange Ticker Info so that these ticker symbols can be used for further querying against the API
@@ -39,8 +35,11 @@ class BinanceExchangeInfoExtractor:
 
 
 if __name__ == "__main__":
-    binance_exchange_info_extractor: BinanceExchangeInfoExtractor = BinanceExchangeInfoExtractor()
+    binance_exchange_info_extractor: BinanceExchangeInfoExtractor = (
+        BinanceExchangeInfoExtractor()
+    )
     event_loop: AbstractEventLoop = new_event_loop()
-    res: ExchangeInfo = event_loop.run_until_complete(binance_exchange_info_extractor.extract("ETHUSDT"))
+    res: ExchangeInfo = event_loop.run_until_complete(
+        binance_exchange_info_extractor.extract("ETHUSDT")
+    )
     pprint(res)
-

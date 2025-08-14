@@ -29,7 +29,7 @@ klines_append_only = Table(
     engines.MergeTree(
         partition_by=text(
             "toYYYYMM(open_time)"
-        ), # must use text() for SQL expressions :contentReference[oaicite:0]{index=0}
+        ),  # must use text() for SQL expressions :contentReference[oaicite:0]{index=0}
         order_by=("symbol", "open_time"),
     ),
 )
@@ -40,7 +40,7 @@ klines_rmt = Table(
     metadata,
     # re-declare the same columns (or import from klines_append_only.c if you prefer)
     Column("symbol", types.String),
-    Column("open_time", types.DateTime64(3)), # ms precision
+    Column("open_time", types.DateTime64(3)),  # ms precision
     Column("open_price", types.Float64),
     Column("high_price", types.Float64),
     Column("low_price", types.Float64),
@@ -54,7 +54,7 @@ klines_rmt = Table(
     Column("ignore", types.String),
     Column("created_at", types.DateTime64(3)),
     engines.ReplacingMergeTree(
-        version="created_at", # dedupe by latest created_at timestamp
+        version="created_at",  # dedupe by latest created_at timestamp
         partition_by=text("toYYYYMM(open_time"),
         order_by=("symbol", "open_time"),
     ),
@@ -63,7 +63,7 @@ klines_rmt = Table(
 # 3) Materialized View that routes unique rows into klines_rmt
 klines_mv = MaterializedView(
     klines_rmt,
-    select([*klines_append_only.c]), # select all columns
+    select([*klines_append_only.columns]),  # type: ignore[call-overload]
     name="klines_mv",
-    use_to=True, # generates: CREATE MATERIALIZED VIEW ... TO klines_rmt AS ...
+    use_to=True,  # generates: CREATE MATERIALIZED VIEW ... TO klines_rmt AS ...
 )

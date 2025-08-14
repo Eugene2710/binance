@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class Kline(BaseModel):
+class SingleKline(BaseModel):
     symbol: str
     open_time: int  # e.g. 1499040000000
     open_price: str  # e.g. "0.01634790"
@@ -17,26 +17,26 @@ class Kline(BaseModel):
     ignore: str  # e.g. "0" (unused field)
 
     @staticmethod
-    def create_kline(symbol: str, data: list[str | int]) -> "Kline":
-        return Kline(
+    def create_kline(symbol: str, data: list[str | int]) -> "SingleKline":
+        return SingleKline(
             symbol=symbol,
-            open_time=data[0],
-            open_price=data[1],
-            high_price=data[2],
-            low_price=data[3],
-            close_price=data[4],
-            volume=data[5],
-            close_time=data[6],
-            quote_asset_volume=data[7],
-            number_of_trades=data[8],
-            taker_buy_base_asset_volume=data[9],
-            taker_buy_quote_asset_volume=data[10],
-            ignore=data[11],
+            open_time=int(data[0]),
+            open_price=str(data[1]),
+            high_price=str(data[2]),
+            low_price=str(data[3]),
+            close_price=str(data[4]),
+            volume=str(data[5]),
+            close_time=int(data[6]),
+            quote_asset_volume=str(data[7]),
+            number_of_trades=int(data[8]),
+            taker_buy_base_asset_volume=str(data[9]),
+            taker_buy_quote_asset_volume=str(data[10]),
+            ignore=str(data[11]),
         )
 
 
 class Klines(BaseModel):
-    klines: list[Kline]
+    klines: list[SingleKline]
 
     @staticmethod
     def from_json(symbol: str, raw_data: list[list[str | int]]) -> "Klines":
@@ -44,20 +44,20 @@ class Klines(BaseModel):
         Converts raw JSON (a list of lists) into a Klines object
         """
         parsed_klines = [
-            Kline(
+            SingleKline(
                 symbol=symbol,
-                open_time=item[0],
-                open_price=item[1],
-                high_price=item[2],
-                low_price=item[3],
-                close_price=item[4],
-                volume=item[5],
-                close_time=item[6],
-                quote_asset_volume=item[7],
-                number_of_trades=item[8],
-                taker_buy_base_asset_volume=item[9],
-                taker_buy_quote_asset_volume=item[10],
-                ignore=item[11],
+                open_time=int(item[0]),
+                open_price=str(item[1]),
+                high_price=str(item[2]),
+                low_price=str(item[3]),
+                close_price=str(item[4]),
+                volume=str(item[5]),
+                close_time=int(item[6]),
+                quote_asset_volume=str(item[7]),
+                number_of_trades=int(item[8]),
+                taker_buy_base_asset_volume=str(item[9]),
+                taker_buy_quote_asset_volume=str(item[10]),
+                ignore=str(item[11]),
             )
             for item in raw_data
         ]
@@ -66,7 +66,7 @@ class Klines(BaseModel):
 
 
 if __name__ == "__main__":
-    raw_data = [
+    raw_data: list[list[str | int]] = [
         [
             1499040000000,
             "0.01634790",

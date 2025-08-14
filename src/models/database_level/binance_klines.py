@@ -7,6 +7,7 @@ class SingleKlineDTO(BaseModel):
     """
     DTO for SingleKline into ClickHouse
     """
+
     symbol: str
     open_time: datetime  # e.g. 2025-01-06 00:00:00 (ms resolution, cos it is parsed from unix timestamp)
     open_price: float  # e.g. "0.01634790"

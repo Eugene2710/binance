@@ -24,12 +24,16 @@ class KlinesDAO:
            :taker_buy_quote_asset_volume, :ignore)
         """
     )
-    def __init__(self, connection_string: str) ->  None:
+
+    def __init__(self, connection_string: str) -> None:
         """
         connection_string format: "clickhousedb+connect://localhost:8123/default"
         """
         self._engine: Engine = create_engine(
-            connection_string, connect_args={"verify": False} # a flag to disable TLS certificate checks over HTTPS
+            connection_string,
+            connect_args={
+                "verify": False
+            },  # a flag to disable TLS certificate checks over HTTPS
         )
 
     @retry(
@@ -77,7 +81,7 @@ class KlinesDAO:
 
 if __name__ == "__main__":
     load_dotenv()
-    connection_string: str = os.getenv("CLICKHOUSE_URL")
+    connection_string: str = os.getenv("CLICKHOUSE_URL", "")
     dao: KlinesDAO = KlinesDAO(connection_string)
     dummy_input: list[SingleKlineDTO] = [
         SingleKlineDTO(

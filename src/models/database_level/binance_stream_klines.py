@@ -2,7 +2,10 @@ from pydantic import BaseModel
 from pprint import pprint
 from datetime import datetime
 
-from src.models.service_level.binance_stream_klines import BinanceStreamedKlines, BinanceStreamedKlinesMetadata
+from src.models.service_level.binance_stream_klines import (
+    BinanceStreamedKlines,
+    BinanceStreamedKlinesMetadata,
+)
 
 
 class BinanceStreamedKlinesDTO(BaseModel):
@@ -25,8 +28,12 @@ class BinanceStreamedKlinesDTO(BaseModel):
     def from_single_kline(input: BinanceStreamedKlines):
         return BinanceStreamedKlinesDTO(
             symbol=input.k.s,
-            open_time=datetime.fromtimestamp(input.k.t/1000), # initial value was in ms
-            close_time=datetime.fromtimestamp(input.k.T/1000), # initial value was in ms
+            open_time=datetime.fromtimestamp(
+                input.k.t / 1000
+            ),  # initial value was in ms
+            close_time=datetime.fromtimestamp(
+                input.k.T / 1000
+            ),  # initial value was in ms
             open_price=float(input.k.o),
             high_price=float(input.k.h),
             low_price=float(input.k.l),
@@ -41,9 +48,31 @@ class BinanceStreamedKlinesDTO(BaseModel):
 
 
 if __name__ == "__main__":
-    sample_streamed_kline: BinanceStreamedKlines = BinanceStreamedKlines(e='kline', E=1754495086023, s='BTCUSDT', k=BinanceStreamedKlinesMetadata(t=1754495085000, T=1754495085999, s='BTCUSDT', i='1s', f=5136784691, L=5136784694, o='115211.88000000', c='115211.88000000', h='115211.88000000', l='115211.87000000', v='0.03644000', n=4, x=True, q='4198.32054920', V='0.00064000', Q='73.73560320', B='0'))
-    binance_streamed_kline_dto: BinanceStreamedKlinesDTO = BinanceStreamedKlinesDTO.from_single_kline(sample_streamed_kline)
+    sample_streamed_kline: BinanceStreamedKlines = BinanceStreamedKlines(
+        e="kline",
+        E=1754495086023,
+        s="BTCUSDT",
+        k=BinanceStreamedKlinesMetadata(
+            t=1754495085000,
+            T=1754495085999,
+            s="BTCUSDT",
+            i="1s",
+            f=5136784691,
+            L=5136784694,
+            o="115211.88000000",
+            c="115211.88000000",
+            h="115211.88000000",
+            l="115211.87000000",
+            v="0.03644000",
+            n=4,
+            x=True,
+            q="4198.32054920",
+            V="0.00064000",
+            Q="73.73560320",
+            B="0",
+        ),
+    )
+    binance_streamed_kline_dto: BinanceStreamedKlinesDTO = (
+        BinanceStreamedKlinesDTO.from_single_kline(sample_streamed_kline)
+    )
     pprint(binance_streamed_kline_dto)
-
-
-

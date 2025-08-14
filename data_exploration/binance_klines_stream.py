@@ -2,7 +2,7 @@ from asyncio import AbstractEventLoop, new_event_loop
 import json
 from typing import AsyncGenerator, Any
 import aiohttp
-from aiohttp import ClientWebSocketResponse, WSMessage
+from aiohttp import WSMessage
 
 """
 Streams from Binance 
@@ -53,7 +53,7 @@ async def get_klines_socket() -> AsyncGenerator[list[dict[str, Any]], None]:
                 # ws: ClientWebSocketResponse
                 async for msg in ws:
                     # technically redundant: to help pycharm understand msg has .type and .data attributes
-                    msg: WSMessage
+                    msg: WSMessage  # type: ignore[no-redef]
                     if msg.type == aiohttp.WSMsgType.TEXT:
                         msg_string: str = msg.data
                         msg_dict: list[dict[str, Any]] = json.loads(msg_string)

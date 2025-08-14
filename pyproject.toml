@@ -32,3 +32,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.mypy]
 explicit_package_bases = true
 check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "clickhouse_sqlalchemy.*"
+ignore_missing_imports = true

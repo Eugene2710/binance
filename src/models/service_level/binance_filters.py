@@ -7,6 +7,7 @@ class BaseFilter(BaseModel):
     Symbol filter models
     - https://developers.binance.com/docs/binance-spot-api-docs/filters
     """
+
     filterType: str
 
 
@@ -118,6 +119,7 @@ class ExchangeMaxNumOrdersFilter(BaseFilter):
     """
     Exchange Filter Models
     """
+
     filterType: Literal["EXCHANGE_MAX_NUM_ORDERS"] = "EXCHANGE_MAX_NUM_ORDERS"
     maxNumOrders: int
 
@@ -128,7 +130,9 @@ class ExchangeMaxNumAlgoOrdersFilter(BaseFilter):
 
 
 class ExchangeMaxNumIcebergOrdersFilter(BaseFilter):
-    filterType: Literal["EXCHANGE_MAX_NUM_ICEBERG_ORDERS"] = "EXCHANGE_MAX_NUM_ICEBERG_ORDERS"
+    filterType: Literal["EXCHANGE_MAX_NUM_ICEBERG_ORDERS"] = (
+        "EXCHANGE_MAX_NUM_ICEBERG_ORDERS"
+    )
     maxNumIcebergOrders: int
 
 
