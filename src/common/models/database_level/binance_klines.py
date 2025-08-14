@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
-from src.models.service_level.binance_klines import SingleKline
+from src.common.models.service_level.binance_klines import SingleKline
 
 
 class SingleKlineDTO(BaseModel):

@@ -6,7 +6,7 @@ from sqlalchemy.exc import OperationalError
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
 from dotenv import load_dotenv
 
-from src.models.database_level.binance_klines import SingleKlineDTO
+from src.common.models.database_level.binance_klines import SingleKlineDTO
 
 
 class KlinesDAO:

@@ -4,6 +4,10 @@ version = "0.1.0"
 description = ""
 authors = ["eugeneleejunping <eugeneleejunping@gmail.com>"]
 readme = "README.md"
+packages = [
+    { include = "extractor_process", from = "src" },
+    { include = "common", from = "src" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -35,4 +39,8 @@ check_untyped_defs = true
 
 [[tool.mypy.overrides]]
 module = "clickhouse_sqlalchemy.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pyarrow.*"
 ignore_missing_imports = true

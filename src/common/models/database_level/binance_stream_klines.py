@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from pprint import pprint
 from datetime import datetime
 
-from src.models.service_level.binance_stream_klines import (
+from src.common.models.service_level.binance_stream_klines import (
     BinanceStreamedKlines,
     BinanceStreamedKlinesMetadata,
 )

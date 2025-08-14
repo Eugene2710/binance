@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from pprint import pprint
 
-from src.models.service_level.binance_stream_exchange_info import (
+from src.common.models.service_level.binance_stream_exchange_info import (
     BinanceStreamedExchangeInfo,
 )
 
