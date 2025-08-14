@@ -34,6 +34,7 @@ Note: To get exchange info for klines info, [ExchangeInfo API](https://developer
 Source: [Binance Stream Docs](https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams)
 
 ### Potential Questions to consider
+
 QQ: For 1 trading pair, how many API requests do you need to get 1 minute resolution data, for start of data 2024 and to get the data in a reasonable amount of time, let's say 3 days.
 
 Start: 1 January 2024
@@ -64,7 +65,8 @@ Hence, the ETL pipeline will be the limiting factor.
 4. Database Level Data Classes (DTO)
 
 ## Project Setup
-1. Install ClickHouse 25.5 and run locally
+
+### 1. Install ClickHouse 25.5 and run locally
 
 Follow the instructions [here for MacOS](https://clickhouse.com/docs/install)
 
@@ -88,6 +90,82 @@ To connect to Local ClickHouse on Port 9000
 
 ```commandline
 clickhouse client
+```
+
+### 2. Setup LocalStack for S3 and SQS Testing
+
+This project uses LocalStack to provide local AWS services (S3 and SQS) for development and testing.
+
+#### Start LocalStack Services
+
+Use Docker Compose to start LocalStack with S3 and SQS services:
+
+```bash
+docker-compose -f docker-compose.yml up
+```
+
+This will start:
+- **LocalStack Gateway** on `localhost:4566` (for AWS API calls)
+- **MinIO Web UI** on `localhost:9001` (for visual S3 management)
+
+#### MinIO Web UI Access
+
+Once both services are running, you can access the MinIO web interface at:
+```
+http://localhost:9001
+```
+
+Login credentials:
+- **Username:** minioadmin
+- **Password:** minioadmin
+
+The MinIO UI allows you to:
+- Browse S3 buckets and objects visually
+- Upload and download files
+- Manage bucket policies and settings
+- Monitor storage usage
+
+Note: The MinIO UI connects to LocalStack's S3 service, providing a visual interface for the LocalStack S3 backend.
+
+#### Configure AWS CLI for LocalStack
+
+To interact with LocalStack using AWS CLI:
+
+```bash
+# Configure AWS CLI to point to LocalStack
+aws configure set aws_access_key_id test
+aws configure set aws_secret_access_key test
+aws configure set region us-east-1
+
+# Create a test bucket
+aws --endpoint-url=http://localhost:4566 s3 mb s3://test-bucket
+
+# List buckets
+aws --endpoint-url=http://localhost:4566 s3 ls
+```
+
+#### Integration Testing
+
+The integration tests automatically configure boto3 to use LocalStack:
+
+```python
+# Tests automatically use LocalStack endpoint
+s3_client = boto3.client(
+    "s3",
+    endpoint_url="http://localhost:4566",
+    aws_access_key_id="test",
+    aws_secret_access_key="test",
+    region_name="us-east-1"
+)
+```
+
+Run integration tests with:
+```bash
+# Make sure LocalStack is running first
+docker-compose up -d
+
+# Run the tests
+PYTHONPATH=. python -m pytest integration_tests/ -v
 ```
 
 <details>
