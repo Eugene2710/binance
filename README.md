@@ -146,17 +146,14 @@ aws --endpoint-url=http://localhost:4566 s3 ls
 
 #### Integration Testing
 
-The integration tests automatically configure boto3 to use LocalStack:
+The integration tests use environment variables to configure boto3 for LocalStack. Set these environment variables before running tests:
 
-```python
-# Tests automatically use LocalStack endpoint
-s3_client = boto3.client(
-    "s3",
-    endpoint_url="http://localhost:4566",
-    aws_access_key_id="test",
-    aws_secret_access_key="test",
-    region_name="us-east-1"
-)
+```bash
+# Configure boto3 to use LocalStack via environment variables
+export AWS_ENDPOINT_URL=http://localhost:4566
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+export AWS_DEFAULT_REGION=us-east-1
 ```
 
 Run integration tests with:
@@ -164,8 +161,20 @@ Run integration tests with:
 # Make sure LocalStack is running first
 docker-compose up -d
 
-# Run the tests
+# Set environment variables and run tests
+export AWS_ENDPOINT_URL=http://localhost:4566
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+export AWS_DEFAULT_REGION=us-east-1
 PYTHONPATH=. python -m pytest integration_tests/ -v
+```
+
+Or create a `.env` file with:
+```bash
+AWS_ENDPOINT_URL=http://localhost:4566
+AWS_ACCESS_KEY_ID=test
+AWS_SECRET_ACCESS_KEY=test
+AWS_DEFAULT_REGION=us-east-1
 ```
 
 <details>
