@@ -1,5 +1,4 @@
 import io
-from datetime import datetime
 from src.extractor_process.extractors.batching.get_klines import BinanceKlinesExtractor
 from src.extractor_process.formatter.klines_to_parquet_formatter import (
     KLinesToParquetFormatter,
@@ -8,6 +7,7 @@ from src.extractor_process.s3_writer.s3_writer import S3Writer
 from src.extractor_process.config import DataSourceConfig
 from src.common.models.service_level.binance_klines import Klines
 from src.common.logging import setup_logger
+from datetime import datetime
 
 logger = setup_logger(__name__)
 
@@ -36,6 +36,7 @@ class KLinesExtractProcess:
         start_time: datetime | None = None,
         end_time: datetime | None = None,
         limit: int | None = None,
+        current_time: datetime | None = None,
     ) -> None:
         """
         Run the complete KLines extraction process:
@@ -69,7 +70,9 @@ class KLinesExtractProcess:
             logger.info("Successfully formatted KLines data to Parquet")
 
             # Step 3: Generate S3 path with timestamp using config
-            timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
+            if current_time is None:
+                current_time = datetime.utcnow()
+            timestamp = current_time.strftime("%Y%m%d%H%M%S%f")
             filename = f"btcusd_{timestamp}.parquet"
             s3_path = f"{self.config.source_path}/{filename}"
 
@@ -91,41 +94,36 @@ async def main():
     """
     Main method for local testing of KLinesExtractProcess
     """
-    from datetime import datetime
-    
     # Initialize dependencies
     extractor = BinanceKlinesExtractor()
     formatter = KLinesToParquetFormatter()
     s3_writer = S3Writer()
-    
+
     # Configure data source (using environment variables for LocalStack)
     config = DataSourceConfig(
-        bucket_name="crypto",
-        source_path="data_sources/klines_pricing/btcusd"
+        bucket_name="crypto", source_path="data_sources/klines_pricing/btcusd"
     )
-    
+
     # Create the extract process
     extract_process = KLinesExtractProcess(
-        extractor=extractor,
-        formatter=formatter,
-        s3_writer=s3_writer,
-        config=config
+        extractor=extractor, formatter=formatter, s3_writer=s3_writer, config=config
     )
-    
+
     # Run extraction for BTCUSDT with recent data
     logger.info("Starting local test run of KLinesExtractProcess")
-    
+
     await extract_process.run(
         symbol="BTCUSDT",
         interval="1m",
         start_time=datetime(2024, 1, 1, 0, 0),
         end_time=datetime(2024, 1, 1, 0, 10),  # 10 minutes of data
-        limit=10
+        limit=10,
     )
-    
+
     logger.info("Local test run completed successfully")
 
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())
