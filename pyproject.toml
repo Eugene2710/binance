@@ -5,6 +5,7 @@ description = ""
 authors = ["eugeneleejunping <eugeneleejunping@gmail.com>"]
 readme = "README.md"
 packages = [
+    { include = "loader_process", from = "src" },
     { include = "extractor_process", from = "src" },
     { include = "common", from = "src" }
 ]

@@ -295,4 +295,113 @@ Spin up ClickHouse on (HTTP) Port 8123 and (Native SQL Protocol) Port 9000
 
 ```commandline
 ./bin/usr/clickhouse server
+```
+
+## Testing
+
+### Unit Tests
+```bash
+# Run all unit tests
+poetry run pytest tests/
+
+# Run specific test modules
+poetry run pytest tests/unit/
+```
+
+### Integration Tests
+
+Integration tests require running services (ClickHouse, LocalStack, etc.) and proper environment configuration.
+
+#### Prerequisites
+1. **Start Docker Services**:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Configure Environment Variables**:
+   ```bash
+   # Export ClickHouse credentials for integration tests
+   export CLICKHOUSE_HOST=localhost
+   export CLICKHOUSE_PORT=8123
+   export CLICKHOUSE_USERNAME=default
+   export CLICKHOUSE_PASSWORD=password
+   export CLICKHOUSE_DATABASE=default
+   
+   # Optional: Export other service credentials
+   export AWS_ACCESS_KEY_ID=test
+   export AWS_SECRET_ACCESS_KEY=test
+   export AWS_DEFAULT_REGION=us-east-1
+   export AWS_ENDPOINT_URL=http://localhost:4566
+   ```
+
+3. **Verify Services Are Running**:
+   ```bash
+   # Check ClickHouse
+   curl -u default:password http://localhost:8123/ping
+   # Should return: Ok.
+   
+   # Check LocalStack
+   curl http://localhost:4566/health
+   # Should return health status
+   ```
+
+#### Running Integration Tests
+
+```bash
+# Run all integration tests
+CLICKHOUSE_PASSWORD=password poetry run pytest integration_tests/ -v
+
+# Run specific integration test suites
+CLICKHOUSE_PASSWORD=password poetry run pytest integration_tests/src/loader_process/loaders/ -v
+
+# Run with verbose output for debugging
+CLICKHOUSE_PASSWORD=password poetry run pytest integration_tests/src/loader_process/loaders/test_clickhouse_loader.py -vvv
+```
+
+#### ClickHouse Integration Tests
+
+The ClickHouse loader integration tests validate:
+- **End-to-end data pipeline**: Binary Parquet → PyArrow Table → ClickHouse
+- **Table operations**: Temporary tables, append-only tables, ReplacingMergeTree
+- **Data deduplication**: Materialized views and ReplacingMergeTree functionality
+- **Error handling**: Invalid data, schema mismatches, connection issues
+- **Resource cleanup**: Automatic cleanup of temporary tables
+
+Test coverage includes:
+- `test_clickhouse_loader_integration`: Full pipeline with deduplication verification
+- `test_loader_error_handling`: Error scenarios with invalid parquet data
+- `test_loader_schema_validation`: Schema mismatch detection
+
+#### Troubleshooting Integration Tests
+
+**Connection Issues (Error 516)**:
+```bash
+# Restart ClickHouse if authentication fails
+docker-compose restart clickhouse
+
+# Check ClickHouse logs
+docker-compose logs clickhouse
+
+# Verify credentials work
+curl -u default:password http://localhost:8123 -d "SELECT 1"
+```
+
+**Table Creation Issues**:
+```bash
+# Clean up any leftover test tables
+docker exec clickhouse clickhouse-client --query "DROP TABLE IF EXISTS test_crypto_prices_temp"
+docker exec clickhouse clickhouse-client --query "DROP TABLE IF EXISTS test_crypto_prices_append_only"
+```
+
+**Port Conflicts**:
+- ClickHouse HTTP: `localhost:8123`
+- ClickHouse Native: `localhost:9000`
+- LocalStack: `localhost:4566`
+- MinIO Console: `localhost:9001`
+
+### Running All Tests
+```bash
+# Run both unit and integration tests
+export CLICKHOUSE_PASSWORD=password
+poetry run pytest tests/ integration_tests/ -v
 ```     
