@@ -1,0 +1,23 @@
+{
+  "QueueConfigurations": [
+    {
+      "Id": "klines-parquet-notification",
+      "QueueArn": "QUEUE_ARN_PLACEHOLDER",
+      "Events": ["s3:ObjectCreated:*"],
+      "Filter": {
+        "Key": {
+          "FilterRules": [
+            {
+              "Name": "prefix",
+              "Value": "data_sources/klines_pricing/btcusd/"
+            },
+            {
+              "Name": "suffix",
+              "Value": ".parquet"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

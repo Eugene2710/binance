@@ -169,6 +169,107 @@ export AWS_DEFAULT_REGION=us-east-1
 PYTHONPATH=. python -m pytest integration_tests/ -v
 ```
 
+### 3. Verify S3 and SQS Setup
+
+After starting LocalStack with `docker-compose up`, you can verify that the S3 bucket, SQS queue, and notification configuration are properly set up:
+
+#### Verify S3 Bucket Exists
+
+```bash
+# List all buckets
+aws --endpoint-url=http://localhost:4566 s3 ls
+
+# Check if crypto bucket exists specifically
+aws --endpoint-url=http://localhost:4566 s3 ls s3://crypto
+```
+
+#### Verify SQS Queue Exists
+
+```bash
+# List all queues
+aws --endpoint-url=http://localhost:4566 sqs list-queues
+
+# Get queue URL for klines-notifications
+aws --endpoint-url=http://localhost:4566 sqs get-queue-url --queue-name klines-notifications
+```
+
+#### Verify Bucket Notification Configuration
+
+```bash
+# Get the notification configuration for the crypto bucket
+aws --endpoint-url=http://localhost:4566 s3api get-bucket-notification-configuration --bucket crypto
+```
+
+This should return a JSON response showing the S3 to SQS notification setup:
+```json
+{
+    "QueueConfigurations": [
+        {
+            "Id": "klines-parquet-notification",
+            "QueueArn": "arn:aws:sqs:us-east-1:000000000000:klines-notifications",
+            "Events": ["s3:ObjectCreated:*"],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "prefix",
+                            "Value": "data_sources/klines_pricing/btcusd/"
+                        },
+                        {
+                            "Name": "suffix", 
+                            "Value": ".parquet"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
+```
+
+#### Test the Notification System
+
+To test that S3 notifications are working and get a real notification with file path information:
+
+```bash
+# Set AWS credentials for LocalStack
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+export AWS_DEFAULT_REGION=us-east-1
+
+# Create a test parquet file
+echo "test data" > test.parquet
+
+# Upload to the monitored path (this triggers the notification)
+aws --endpoint-url=http://localhost:4566 s3 cp test.parquet s3://crypto/data_sources/klines_pricing/btcusd/test.parquet
+
+# Check for the notification message
+aws --endpoint-url=http://localhost:4566 sqs receive-message --queue-url http://localhost:4566/000000000000/klines-notifications
+
+# Clean up test file
+aws --endpoint-url=http://localhost:4566 s3 rm s3://crypto/data_sources/klines_pricing/btcusd/test.parquet
+rm test.parquet
+```
+
+If the notification system is working, you should see a message in the SQS queue containing details about the uploaded file. The real notification will include the file path in the `s3.object.key` field:
+
+```json
+{
+  "Records": [{
+    "eventName": "ObjectCreated:Put",
+    "s3": {
+      "bucket": {"name": "crypto"},
+      "object": {
+        "key": "data_sources/klines_pricing/btcusd/test.parquet",
+        "size": 18
+      }
+    }
+  }]
+}
+```
+
+Note: You may also see test events that don't contain file information - these are just configuration validation events from LocalStack.
+
 Or create a `.env` file with:
 ```bash
 AWS_ENDPOINT_URL=http://localhost:4566

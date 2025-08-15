@@ -1,0 +1,16 @@
+FROM amazon/aws-cli:latest
+
+# Install sed and curl for placeholder replacement and health checks
+RUN yum update -y && yum install -y --allowerasing sed curl && yum clean all
+
+# Copy the notification configuration template and setup script
+COPY resources/sqs_config/notification-config.json /config/notification-config.json
+COPY resources/scripts/setup-s3-notifications.sh /setup-s3-notifications.sh
+
+# Make the script executable
+RUN chmod +x /setup-s3-notifications.sh
+
+# Override the entrypoint and run the script with bash
+# Running the script with bash is crucial to parse the setup-s3-notifications.sh script
+ENTRYPOINT ["/bin/bash"]
+CMD ["/setup-s3-notifications.sh"]
