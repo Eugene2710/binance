@@ -5,6 +5,14 @@ This project extracts and streams (in progress)
 1. OrderBook information
 2. KLines Candlestick Data for OCHLV data for trading pairs.
 
+## MIRO Architecture
+
+Below is the ELT architecture:
+![image](./resources/images/elt_architecture_extract.png)
+![image](./resources/images/elt_architecture_load.png)
+![image](./resources/images/elt_architecture_transform.png)
+![image](./resources/images/elt_architecture_addition_process.png)
+
 ## Binance Rate Limits & Resolution
 
 Binance has the following rate limits:
