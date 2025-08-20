@@ -25,7 +25,7 @@ class TestS3Reader:
                 raise
 
     def test_download_fileobj_success(
-            self, setup_localstack, test_bucket: str, s3_client: S3Client
+        self, setup_localstack, test_bucket: str, s3_client: S3Client
     ):
         """Test successful file download from LocalStack S3"""
         # Arrange
@@ -46,7 +46,7 @@ class TestS3Reader:
         assert downloaded_data == test_data
 
     def test_download_fileobj_with_different_params(
-            self, setup_localstack, s3_client: S3Client
+        self, setup_localstack, s3_client: S3Client
     ):
         """Test download with different bucket and path parameters"""
         # Arrange
@@ -84,7 +84,7 @@ class TestS3Reader:
             reader.download_fileobj(invalid_bucket, path)
 
     def test_download_fileobj_client_error_with_invalid_key(
-            self, setup_localstack, test_bucket: str
+        self, setup_localstack, test_bucket: str
     ):
         """Test that ClientError is raised for non-existent key"""
         # Arrange
@@ -96,7 +96,7 @@ class TestS3Reader:
             reader.download_fileobj(test_bucket, non_existent_path)
 
     def test_download_fileobj_empty_file(
-            self, setup_localstack, test_bucket: str, s3_client: S3Client
+        self, setup_localstack, test_bucket: str, s3_client: S3Client
     ):
         """Test downloading an empty file"""
         # Arrange
@@ -117,7 +117,7 @@ class TestS3Reader:
         assert downloaded_data == empty_data
 
     def test_multiple_downloads_same_instance(
-            self, setup_localstack, test_bucket: str, s3_client: S3Client
+        self, setup_localstack, test_bucket: str, s3_client: S3Client
     ):
         """Test multiple downloads using the same S3Reader instance"""
         # Arrange
@@ -149,7 +149,7 @@ class TestS3Reader:
         assert buffer2.read() == data2
 
     def test_download_fileobj_integration_with_real_data_format(
-            self, setup_localstack, test_bucket: str, s3_client: S3Client
+        self, setup_localstack, test_bucket: str, s3_client: S3Client
     ):
         """Test download with data that resembles real parquet format"""
         # Arrange
@@ -171,7 +171,7 @@ class TestS3Reader:
         assert downloaded_data == parquet_like_data
 
     def test_download_fileobj_large_data(
-            self, setup_localstack, test_bucket: str, s3_client: S3Client
+        self, setup_localstack, test_bucket: str, s3_client: S3Client
     ):
         """Test downloading larger data to verify multipart handling"""
         # Arrange
@@ -194,7 +194,7 @@ class TestS3Reader:
         assert downloaded_data == large_data
 
     def test_download_fileobj_buffer_position_reset(
-            self, setup_localstack, test_bucket: str, s3_client: S3Client
+        self, setup_localstack, test_bucket: str, s3_client: S3Client
     ):
         """Test that returned buffer is positioned at the beginning"""
         # Arrange
@@ -215,7 +215,7 @@ class TestS3Reader:
         assert downloaded_data == test_data
 
     def test_download_fileobj_with_special_characters_in_path(
-            self, setup_localstack, test_bucket: str, s3_client: S3Client
+        self, setup_localstack, test_bucket: str, s3_client: S3Client
     ):
         """Test download with special characters in the file path"""
         # Arrange
@@ -236,7 +236,7 @@ class TestS3Reader:
         assert downloaded_data == test_data
 
     def test_download_fileobj_returns_bytesio_instance(
-            self, setup_localstack, test_bucket: str, s3_client: S3Client
+        self, setup_localstack, test_bucket: str, s3_client: S3Client
     ):
         """Test that the method returns a BytesIO instance"""
         # Arrange

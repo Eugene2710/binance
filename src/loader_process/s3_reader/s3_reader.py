@@ -1,5 +1,3 @@
-import logging
-
 import boto3
 import io
 from botocore.exceptions import ClientError
@@ -19,7 +17,10 @@ class S3Reader:
     def download_fileobj(self, bucket_name: str, path: str) -> io.BytesIO:
         try:
             buffer = io.BytesIO()
-            self._s3_client.download_fileobj(Bucket=bucket_name, Key=path, Fileobj=buffer)
+            self._s3_client.download_fileobj(
+                Bucket=bucket_name, Key=path, Fileobj=buffer
+            )
+            buffer.seek(0)
             return buffer
         except ClientError:
             logger.exception(f"Failed to upload buffer to s3://{bucket_name}/{path}")

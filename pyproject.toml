@@ -19,6 +19,9 @@ aiohttp = "^3.9.5"
 clickhouse-connect = "^0.8.17"
 clickhouse-sqlalchemy = "^0.3.2"
 tenacity = "^9.1.2"
+pyarrow = "^21.0.0"
+pandas = "^2.3.1"
+mypy-boto3-sqs = "^1.40.0"
 
 [tool.poetry.dev-dependencies]
 ruff = "^0.4.8"
