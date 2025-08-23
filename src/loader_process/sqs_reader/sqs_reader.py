@@ -1,7 +1,7 @@
 import boto3
 import json
 import os
-from typing import Any, Sequence
+from typing import Any
 from pydantic import BaseModel
 from mypy_boto3_sqs.type_defs import (
     ReceiveMessageResultTypeDef,
@@ -15,7 +15,7 @@ from src.common.logging import setup_logger
 logger = setup_logger(__name__)
 
 
-class S3NotificationMessage(BaseModel):
+class S3PutNotificationMessage(BaseModel):
     """
     Represents a parsed S3 notification message from SQS
 
@@ -25,23 +25,22 @@ class S3NotificationMessage(BaseModel):
     2. object_key - Required
     - The full path to the file in S3 (e.g., "klines/BTCUSDT/2023/01/file.parquet")
     - Essential for identifying and accessing the specific file
-    3. event_name - Highly useful
-    - Tells you what happened ("ObjectCreated:Put", "ObjectRemoved:Delete", etc.)
-    - Lets you filter/handle different event types appropriately
-    - Critical for avoiding processing delete events as new files
 
-    To identify file location: use bucket_name + object_key)
-    To determine if file processing is required, use event_name
+    To identify file location: use bucket_name + object_key
 
     Potentially useful additional fields:
+    - event_name - When you want to parse/delete event based on event name, e.g "ObjectCreated:Put", "ObjectRemoved:Delete"
     - event_time - When the event occurred (useful for ordering/deduplication)
     - object_size - File size (useful for batching/resource planning)
     - object_etag - File version identifier (useful for deduplication)
+
+    TODO: include event_time down the road because there could be a case where given files were uploaded in a batch,
+    we want the files to be uploaded in order of upload. If the later file was uploaded first before the one later,
+    the data uploaded eventually might not be the most up to date one
     """
 
     bucket_name: str
     object_key: str
-    event_name: str
 
 
 class SQSReader:
@@ -61,7 +60,7 @@ class SQSReader:
         if not self._queue_url:
             raise ValueError("SQS_QUEUE_URL environment variable is required")
 
-    def _read_messages(self, max_messages: int = 10) -> list[MessageTypeDef]:
+    def read_messages(self, max_messages: int = 10) -> list[MessageTypeDef]:
         """
         Consumes up to max messages from SQS
         """
@@ -90,7 +89,7 @@ class SQSReader:
         if not messages:
             return
         try:
-            entries: Sequence[DeleteMessageBatchRequestEntryTypeDef] = [
+            entries: list[DeleteMessageBatchRequestEntryTypeDef] = [
                 {"Id": str(i), "ReceiptHandle": message["ReceiptHandle"]}
                 for i, message in enumerate(messages)
             ]
@@ -98,6 +97,7 @@ class SQSReader:
             for i in range(0, len(entries), 10):
                 # DeleteMessageBatchRequestTypeDef requires "QueueUrl" and "Entries" of type Sequence[DeleteMessageBatchRequestEntryTypeDef]
                 # and DeleteMessageBatchRequestEntryTypeDef requires "Id" and "ReceiptHandle"
+                # TLDR: to delete a message, you need the Id and ReceiptHandle
                 batch = entries[i : i + 10]
                 response = self._sqs_client.delete_message_batch(
                     QueueUrl=self._queue_url, Entries=batch
@@ -112,42 +112,32 @@ class SQSReader:
                 f"Failed to delete messages from SQS queue {self._queue_url}"
             )
 
-    def _parse_s3_notification(
+    def parse_and_filter_put_s3_notification(
         self, message: MessageTypeDef
-    ) -> list[S3NotificationMessage]:
+    ) -> list[S3PutNotificationMessage]:
         """
-        Parse S3 notfication message from SQS
+        Parse S3 notification message from SQS and filter for ObjectCreated:Put
         """
         try:
             # message["Body"] is a json string
             body: dict[str, Any] = json.loads(message["Body"])
 
-            # Handle both direct S3 notifications and SNS wrapped messages - "Records" are nested within "Message" and requires double parsing
-            if "Records" in body:
-                records = body["Records"]
-            elif "Message" in body:
-                # SNS wrapped message
-                sns_message = json.loads(body["Message"])
-                records = sns_message.get("Records", [])
-            else:
-                logger.warning(f"Unrecognized message format: {body}")
-                return []
+            records = body.get("Records", [])
 
-            notifications = []
+            notifications: list[S3PutNotificationMessage] = []
             for record in records:
                 # refer to https://docs.aws.amazon.com/AmazonS3/latest/userguide/notification-content-structure.html for event message structure
                 s3_info: dict[str, Any] = record.get("s3", {})
                 bucket_name: str = s3_info["bucket"]["name"]
                 object_key: str = s3_info["object"]["key"]
                 event_name: str = record.get("eventName", "unknown")
-
-                notifications.append(
-                    S3NotificationMessage(
-                        bucket_name=bucket_name,
-                        object_key=object_key,
-                        event_name=event_name,
+                if event_name == "ObjectCreated:Put":
+                    notifications.append(
+                        S3PutNotificationMessage(
+                            bucket_name=bucket_name,
+                            object_key=object_key,
+                        )
                     )
-                )
 
             logger.info(f"Parsed {len(notifications)} S3 notifications from message")
             return notifications
@@ -155,24 +145,3 @@ class SQSReader:
         except (json.JSONDecodeError, KeyError):
             logger.exception(f"Failed to parse S3 notification message: {message}")
             raise
-
-    def get_s3_notifications(
-        self, max_messages: int = 10
-    ) -> list[S3NotificationMessage]:
-        """
-        Convenience method to read and parse s3 notifications
-        """
-        messages: list[MessageTypeDef] = self._read_messages(max_messages)
-        notifications: list[S3NotificationMessage] = []
-
-        for message in messages:
-            try:
-                message_notifications: list[S3NotificationMessage] = (
-                    self._parse_s3_notification(message)
-                )
-                notifications.extend(message_notifications)
-            except Exception as e:
-                logger.error(f"Failed to parse message, skipping: {e}")
-                continue
-
-        return notifications

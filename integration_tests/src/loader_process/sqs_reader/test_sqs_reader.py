@@ -7,10 +7,15 @@ import time
 import uuid
 from botocore.exceptions import ClientError
 from mypy_boto3_s3 import S3Client
+from mypy_boto3_s3.type_defs import (
+    ObjectIdentifierTypeDef,
+    NotificationConfigurationTypeDef,
+)
 from mypy_boto3_sqs import SQSClient
 import boto3
+from mypy_boto3_sqs.type_defs import MessageTypeDef
 
-from src.loader_process.sqs_reader.sqs_reader import SQSReader
+from src.loader_process.sqs_reader.sqs_reader import SQSReader, S3PutNotificationMessage
 
 
 class TestSQSReader:
@@ -68,7 +73,7 @@ class TestSQSReader:
             queue_arn = attrs_response["Attributes"]["QueueArn"]
 
             # Configure S3 bucket notification
-            notification_config = {
+            notification_config: NotificationConfigurationTypeDef = {
                 "QueueConfigurations": [
                     {
                         "Id": "klines-parquet-notification-test",
@@ -110,7 +115,7 @@ class TestSQSReader:
                 # Delete all objects in bucket
                 objects_response = s3_client.list_objects_v2(Bucket=test_bucket_name)
                 if "Contents" in objects_response:
-                    delete_keys = [
+                    delete_keys: list[ObjectIdentifierTypeDef] = [
                         {"Key": obj["Key"]} for obj in objects_response["Contents"]
                     ]
                     s3_client.delete_objects(
@@ -209,28 +214,30 @@ class TestSQSReader:
         # Wait a moment for notification to be processed
         time.sleep(2)
 
-        # Read messages from SQS
-        notifications = reader.get_s3_notifications(max_messages=5)
+        # Read messages from SQS and parse notifications
+        messages = reader.read_messages(max_messages=5)
+        notifications = []
+        for message in messages:
+            notifications.extend(reader.parse_and_filter_put_s3_notification(message))
 
         # Assert
         assert len(notifications) >= 1
         notification = notifications[0]
         assert notification.bucket_name == setup_test_infrastructure["bucket_name"]
         assert notification.object_key == s3_key
-        assert notification.event_name.startswith("ObjectCreated:Put")
 
-    def test_parse_s3_notification_message(self, setup_test_infrastructure):
+    def test_parse_and_filter_s3_notification_message(self, setup_test_infrastructure):
         """Test parsing of S3 notification message structure"""
         # Arrange
         reader = SQSReader()
 
         # Sample S3 notification message structure
-        sample_message = {
+        sample_message: MessageTypeDef = {
             "Body": json.dumps(
                 {
                     "Records": [
                         {
-                            "eventName": "s3:ObjectCreated:Put",
+                            "eventName": "ObjectCreated:Put",
                             "s3": {
                                 "bucket": {"name": "crypto-test"},
                                 "object": {
@@ -244,7 +251,7 @@ class TestSQSReader:
         }
 
         # Act
-        notifications = reader._parse_s3_notification(sample_message)
+        notifications = reader.parse_and_filter_put_s3_notification(sample_message)
 
         # Assert
         assert len(notifications) == 1
@@ -253,48 +260,6 @@ class TestSQSReader:
         assert (
             notification.object_key == "data_sources/klines_pricing/btcusd/test.parquet"
         )
-        assert notification.event_name == "s3:ObjectCreated:Put"
-
-    def test_parse_sns_wrapped_s3_notification(self, setup_test_infrastructure):
-        """Test parsing of SNS-wrapped S3 notification message"""
-        # Arrange
-        reader = SQSReader()
-
-        # Sample SNS-wrapped S3 notification
-        sample_message = {
-            "Body": json.dumps(
-                {
-                    "Message": json.dumps(
-                        {
-                            "Records": [
-                                {
-                                    "eventName": "s3:ObjectCreated:Post",
-                                    "s3": {
-                                        "bucket": {"name": "crypto-test"},
-                                        "object": {
-                                            "key": "data_sources/klines_pricing/btcusd/sns_test.parquet"
-                                        },
-                                    },
-                                }
-                            ]
-                        }
-                    )
-                }
-            )
-        }
-
-        # Act
-        notifications = reader._parse_s3_notification(sample_message)
-
-        # Assert
-        assert len(notifications) == 1
-        notification = notifications[0]
-        assert notification.bucket_name == "crypto-test"
-        assert (
-            notification.object_key
-            == "data_sources/klines_pricing/btcusd/sns_test.parquet"
-        )
-        assert notification.event_name == "s3:ObjectCreated:Post"
 
     def test_delete_messages_success(
         self, setup_test_infrastructure, sqs_client: SQSClient
@@ -309,7 +274,7 @@ class TestSQSReader:
         )
 
         # Read the message
-        messages = reader._read_messages(max_messages=1)
+        messages = reader.read_messages(max_messages=1)
         assert len(messages) == 1
 
         # Act - Delete the message
@@ -346,7 +311,7 @@ class TestSQSReader:
         reader = SQSReader()
 
         # Act - Should return quickly even with no messages due to test setup
-        messages = reader._read_messages(max_messages=1)
+        messages = reader.read_messages(max_messages=1)
 
         # Assert
         assert len(messages) == 1
@@ -373,7 +338,10 @@ class TestSQSReader:
         time.sleep(2)
 
         # Act 2 - Read and parse notifications
-        notifications = reader.get_s3_notifications(max_messages=5)
+        messages = reader.read_messages(max_messages=5)
+        notifications = []
+        for message in messages:
+            notifications.extend(reader.parse_and_filter_put_s3_notification(message))
 
         # Assert
         assert len(notifications) >= 1
@@ -388,7 +356,6 @@ class TestSQSReader:
         assert our_notification is not None
         assert our_notification.bucket_name == setup_test_infrastructure["bucket_name"]
         assert our_notification.object_key == s3_key
-        assert our_notification.event_name.startswith("ObjectCreated:Put")
 
     def test_notification_filtering_by_prefix_and_suffix(
         self, setup_test_infrastructure, s3_client: S3Client
@@ -423,7 +390,10 @@ class TestSQSReader:
         time.sleep(3)
 
         # Act
-        notifications = reader.get_s3_notifications(max_messages=10)
+        messages = reader.read_messages(max_messages=10)
+        notifications = []
+        for message in messages:
+            notifications.extend(reader.parse_and_filter_put_s3_notification(message))
 
         # Assert - Should only get notification for the valid file
         valid_notifications = [
@@ -470,7 +440,10 @@ class TestSQSReader:
         # Wait for notifications
         time.sleep(3)
 
-        notifications = reader.get_s3_notifications(max_messages=10)
+        messages = reader.read_messages(max_messages=10)
+        notifications = []
+        for message in messages:
+            notifications.extend(reader.parse_and_filter_put_s3_notification(message))
 
         # Assert
         notification_keys = [n.object_key for n in notifications]
