@@ -23,7 +23,7 @@ PARTITION BY toYYYYMM(open_time)
 ORDER BY (symbol, open_time);
 
 -- Server queries this rmt table. This contains distinct rows by symbol, open_time primary key.
-CREATE TABLE klines_rmt AS klines_append_only
+CREATE TABLE IF NOT EXISTS klines_rmt AS klines_append_only
 ENGINE = ReplacingMergeTree(created_at)
 PARTITION BY toYYYYMM(open_time)
 ORDER BY (symbol, open_time);
@@ -32,3 +32,22 @@ ORDER BY (symbol, open_time);
 CREATE MATERIALIZED VIEW klines_mv TO klines_rmt
 AS
 SELECT * from klines_append_only;
+
+CREATE TABLE IF NOT EXISTS klines_temp(
+    symbol String,
+    open_price DateTime64(3), -- ms precision, unix timestamp
+    open_price Float64,
+    high_price Float64,
+    low_price Float64,
+    close_price Float64,
+    volume Float64,
+    close_time DateTime64(3), -- ms precision, unix timestamp
+    quote_asset_volume Float64,
+    number_of_trades Int64,
+    taker_buy_base_asset_volume Float64,
+    taker_buy_quote_asset_volume Float64,
+    ignore String,
+    created_at DateTime64(3) DEFAULT now() -- Time data was inserted into DB
+)
+Engine = MergeTree
+ORDER BY (symbol, open_time);
