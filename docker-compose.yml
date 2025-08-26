@@ -58,5 +58,29 @@ services:
         soft: 262144
         hard: 262144
 
+  clickhouse-init:
+    image: clickhouse/clickhouse-server:24.12
+    container_name: clickhouse-init
+    depends_on:
+      - clickhouse
+    environment:
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=password
+    volumes:
+      - ./resources/sql:/sql:ro
+    entrypoint: >
+      sh -c "
+        echo 'Waiting for ClickHouse to be ready...' &&
+        while ! clickhouse-client --host=clickhouse --user=default --password=password --query='SELECT 1' >/dev/null 2>&1; do
+          echo 'ClickHouse not ready, waiting...'
+          sleep 2
+        done &&
+        echo 'ClickHouse is ready, executing initialization scripts...' &&
+        clickhouse-client --host=clickhouse --user=default --password=password --multiquery < /sql/klines.sql &&
+        echo 'ClickHouse initialization completed successfully'
+      "
+    restart: "no"
+
 volumes:
   clickhouse_data:
