@@ -10,7 +10,7 @@ class KLinesToParquetFormatter(Formatter[Klines]):
     PYARROW_SCHEMA = pa.schema(
         [
             pa.field("symbol", pa.string()),
-            pa.field("open_time", pa.int64()),
+            pa.field("open_time", pa.timestamp("ms")),
             pa.field("open_price", pa.string()),
             pa.field("high_price", pa.string()),
             pa.field("low_price", pa.string()),
