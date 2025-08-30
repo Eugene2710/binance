@@ -413,3 +413,13 @@ docker exec clickhouse clickhouse-client --query "DROP TABLE IF EXISTS test_cryp
 export CLICKHOUSE_PASSWORD=password
 poetry run pytest tests/ integration_tests/ -v
 ```     
+
+### Docker-compose explanation
+
+```txt
+              /-> (minio)
+(localstack)  
+              \-> (setup-s3-notifications)
+
+(clickhouse) -> (clickhouse-init)
+```
