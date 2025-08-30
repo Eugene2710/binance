@@ -1,8 +1,8 @@
 import time
 import signal
 import sys
+from types import FrameType
 from mypy_boto3_sqs.type_defs import MessageTypeDef
-
 from src.loader_process.loaders.clickhouse_loader import ClickHouseLoader
 from src.loader_process.s3_reader.s3_reader import S3Reader
 from src.loader_process.sqs_reader.sqs_reader import SQSReader, S3PutNotificationMessage
@@ -48,7 +48,7 @@ class LoaderProcess:
         signal.signal(signal.SIGINT, self._signal_handler) # check
         signal.signal(signal.SIGTERM, self._signal_handler)
 
-    def _signal_handler(self, signum: int) -> None:
+    def _signal_handler(self, signum: int, frame_type: FrameType) -> None:
         """
         Handles shutdown signals gracefully
         """
@@ -76,7 +76,6 @@ class LoaderProcess:
                 for parsed_notification in parsed_notifications:
                     try:
                         logger.info(f"Processing file: s3://{parsed_notification.bucket_name}/{parsed_notification.object_key}")
-
                         # Download file from S3
                         file_buffer = self._s3_reader.download_fileobj(
                             bucket_name=parsed_notification.bucket_name, path=parsed_notification.object_key
@@ -174,13 +173,13 @@ def main() -> None:
             temp_table_template="klines_temp",
             columns=[
                 "symbol",
-                "open_time"
+                "open_time",
                 "open_price",
                 "high_price",
                 "low_price",
                 "close_price",
                 "volume",
-                "close_time"
+                "close_time",
                 "quote_asset_volume",
                 "number_of_trades",
                 "taker_buy_base_asset_volume",
