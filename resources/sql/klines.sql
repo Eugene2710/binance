@@ -35,7 +35,7 @@ SELECT * from klines_append_only;
 
 CREATE TABLE IF NOT EXISTS klines_temp(
     symbol String,
-    open_price DateTime64(3), -- ms precision, unix timestamp
+    open_time DateTime64(3), -- ms precision, unix timestamp
     open_price Float64,
     high_price Float64,
     low_price Float64,
