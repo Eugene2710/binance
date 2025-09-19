@@ -24,6 +24,7 @@ pandas = "^2.3.1"
 mypy-boto3-sqs = "^1.40.0"
 dbt-core = "^1.10.10"
 dbt-clickhouse = "^1.9.2"
+boto3 = "^1.40.21"
 
 [tool.poetry.dev-dependencies]
 ruff = "^0.4.8"
