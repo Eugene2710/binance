@@ -51,3 +51,22 @@ CREATE TABLE IF NOT EXISTS klines_temp(
 )
 Engine = MergeTree
 ORDER BY (symbol, open_time);
+
+CREATE TABLE IF NOT EXISTS klines_rmt_5min (
+    symbol String,
+    open_time DateTime64(3),
+    open_price Float64,
+    high_price Float64,
+    low_price Float64,
+    close_price Float64,
+    volume Float64,
+    close_time DateTime64(3),
+    quote_asset_volume Float64,
+    number_of_trades Int64,
+    taker_buy_base_asset_volume Float64,
+    taker_buy_quote_asset_volume Float64,
+    ignore String,
+    created_at DateTime64(3) DEFAULT now64(3)
+) ENGINE = ReplacingMergeTree(created_at)
+PARTITION BY toYYYYMM(open_time)
+ORDER BY (symbol, open_time);
