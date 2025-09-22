@@ -13,6 +13,23 @@ services:
       - AWS_SECRET_ACCESS_KEY=test
     volumes:
       - "./.localstack:/var/lib/localstack"
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "awslocal s3 ls >/dev/null 2>&1 || exit 1" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # one-off container to configure/inspect S3 via MinIO Client
+  mc:
+    image: minio/mc:latest
+    container_name: mc
+    depends_on:
+      localstack:
+        condition: service_healthy
+    entrypoint: [ "/bin/sh","-c" ]
+    command: >
+      mc alias set --api S3v4 --path localstack http://localstack:4566 test test &&
+      mc ls localstack || true
 
   setup-s3-notifications:
     build:
@@ -28,18 +45,17 @@ services:
       - localstack
     restart: "no"
 
-  minio:
-    image: minio/minio:latest
-    container_name: minio
-    ports:
-      - "9001:9001" # MinIO Console (Web UI)
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-      - MINIO_SERVER_URL=http://localstack:4566
-    command: server /data --console-address ":9001"
-    depends_on:
-      - localstack
+#  minio:
+#    image: minio/minio:latest
+#    container_name: minio
+#    ports:
+#      - "9001:9001" # MinIO Console (Web UI)
+#    environment:
+#      - MINIO_ROOT_USER=minioadmin
+#      - MINIO_ROOT_PASSWORD=minioadmin
+#    command: server /data --console-address ":9001"
+#    depends_on:
+#      - localstack
 
   clickhouse:
     image: clickhouse/clickhouse-server:24.12
