@@ -1,0 +1,37 @@
+version: 1
+
+sources:
+  - name: resources
+    database: "{{ env_var('CLICKHOUSE_DATABASE') }}"
+    tables:
+      - name: klines_rmt
+        description: "Raw 1-minute klines (external ingestion)"
+        columns:
+          - name: symbol
+            description: "Trading pair symbol, e.g., BTCUSDT"
+          - name: open_time
+            description: "Kline open time (DateTime64(3), ms precision)"
+          - name: open_price
+            description: "Open price"
+          - name: high_price
+            description: "High price"
+          - name: low_price
+            description: "Low price"
+          - name: close_price
+            description: "Close price"
+          - name: volume
+            description: "Trade volume"
+          - name: close_time
+            description: "Kline close time (DateTime64(3))"
+          - name: quote_asset_volume
+            description: "Quote asset volume"
+          - name: number_of_trades
+            description: "Number of trades during the kline interval"
+          - name: taker_buy_base_asset_volume
+            description: "Taker buy base asset volume"
+          - name: taker_buy_quote_asset_volume
+            description: "Taker buy quote asset volume"
+          - name: ignore
+            description: "Placeholder column from source feed"
+          - name: created_at
+            description: "Record creation timestamp (DateTime64(3))"
