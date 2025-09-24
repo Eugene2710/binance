@@ -262,7 +262,7 @@ rm test.parquet
 If the notification system is working, you should see a message in the SQS queue containing details about the uploaded file. The real notification will include the file path in the `s3.object.key` field:
 
 ```json
-{
+{ 
   "Records": [{
     "eventName": "ObjectCreated:Put",
     "s3": {
@@ -423,3 +423,19 @@ poetry run pytest tests/ integration_tests/ -v
 
 (clickhouse) -> (clickhouse-init)
 ```
+</details>
+
+## To Spin up the Project
+### 1. Make sure there is not cached items before spinning up your docker containers
+
+```commandline
+docker compose build --no-cache
+docker compose up --build
+```
+
+### To tear down your project after
+```commandline
+docker compose down
+```
+
+
