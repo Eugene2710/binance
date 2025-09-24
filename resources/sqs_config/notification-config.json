@@ -9,7 +9,7 @@
           "FilterRules": [
             {
               "Name": "prefix",
-              "Value": "data_sources/klines_pricing/btcusd/"
+              "Value": "data_sources/klines_pricing/"
             },
             {
               "Name": "suffix",
